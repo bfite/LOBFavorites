@@ -26,6 +26,8 @@ export default function BookRanker() {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [deckledEdge, setDeckledEdge] = useState<boolean>(false);
+
 
   useEffect(() => {
     const fetchUserFromDb = async () => {
@@ -48,6 +50,7 @@ export default function BookRanker() {
       }
 
       setUserId(user.id);
+      setDeckledEdge(user.deckled_edges || false); // <-- Set toggle from DB
       fetchTopBooks(user.id);
     };
 
@@ -55,6 +58,7 @@ export default function BookRanker() {
   }, []);
 
 
+  
   async function fetchTopBooks(uid: string) {
     setLoading(true);
     const { data, error } = await supabase
@@ -79,6 +83,23 @@ export default function BookRanker() {
     }
     setLoading(false);
   }
+
+  async function updateDeckledEdge(value: boolean) {
+  if (!userId) return;
+
+    setDeckledEdge(value);
+
+    const { error } = await supabase
+      .from("users")
+      .update({ deckled_edges: value })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Error updating deckled_edge:", error);
+      setErrorMsg("Failed to update deckled edge preference.");
+    }
+  }
+
 
   async function searchBooks() {
     if (!query) return;
@@ -199,6 +220,27 @@ export default function BookRanker() {
       {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
       {loading && <p>Loading...</p>}
 
+    <div style={{ textAlign: "center", marginBottom: 8, fontWeight: "bold", fontSize: 18 }}>
+      Deckled Edges?
+    </div>
+
+    <div className="deckled-toggle-container">
+      <span className="deckled-label">Hate</span>
+
+      <label className="switch">
+        <input
+          type="checkbox"
+          checked={deckledEdge}
+          onChange={(e) => updateDeckledEdge(e.target.checked)}
+        />
+        <span className="slider" />
+      </label>
+
+      <span className="deckled-label">Love</span>
+    </div>
+
+
+
       <div style={{ display: "flex", gap: 24 }}>
         <div style={{ flex: 1 }}>
           <h2>Search Results</h2>
@@ -222,12 +264,12 @@ export default function BookRanker() {
         <div style={{ flex: 1 }}>
           <h2>Your Top Books</h2>
           {topBooks.length === 0 && <p>No books added yet.</p>}
-          {topBooks.map((item, index) => {
+          {topBooks.map((item) => {
             const info = item.volumeInfo;
             return (
               <div key={item.id} className="bookboxes">
                 <div>
-                  <div><strong>#{index + 1} - {info.title}</strong></div>
+                  <div><strong>{info.title}</strong></div>
                   <div style={{ fontSize: 12 }}>{info.authors?.join(", ")}</div>
                 </div>
                 <button onClick={() => removeFromTop(item.id)}>Remove</button>
