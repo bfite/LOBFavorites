@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import './styles.css';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -17,6 +18,7 @@ interface BookItem {
   volumeInfo: BookInfo;
 }
 
+
 export default function BookRanker() {
   const [query, setQuery] = useState<string>("");
   const [results, setResults] = useState<BookItem[]>([]);
@@ -26,40 +28,32 @@ export default function BookRanker() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-
-      if (error) {
-        setErrorMsg(error.message);
+    const fetchUserFromDb = async () => {
+      const storedEmail = localStorage.getItem("userEmail");
+      if (!storedEmail) {
+        window.location.href = "#/login";
         return;
       }
 
-      if (user) {
-        setUserId(user.id);
-        fetchTopBooks(user.id);
-      } else {
-        // Redirect to login page or handle unauthenticated state
-        window.location.href = "/login";
-      }
-    };
-    fetchUser();
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", storedEmail)
+        .single();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!session?.user) {
-          setUserId(null);
-          window.location.href = "/login";
-        }
+      if (error || !user) {
+        localStorage.removeItem("userEmail");
+        window.location.href = "#/login";
+        return;
       }
-    );
 
-    return () => {
-      authListener.subscription.unsubscribe();
+      setUserId(user.id);
+      fetchTopBooks(user.id);
     };
+
+    fetchUserFromDb();
   }, []);
+
 
   async function fetchTopBooks(uid: string) {
     setLoading(true);
@@ -176,28 +170,28 @@ export default function BookRanker() {
   }
 
   async function handleLogout() {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
+    localStorage.removeItem("userEmail");
+    window.location.href = "#/login";
   }
 
   return (
     <div style={{ maxWidth: 768, margin: "0 auto", padding: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+
+      <div className="header">
         <h1>Top 10 Books Tracker</h1>
-        <button onClick={handleLogout} style={{ backgroundColor: "red", color: "white", border: "none", padding: "8px 12px", cursor: "pointer" }}>
-          Logout
-        </button>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div className="search-container" style={{ marginBottom: 16 }}>
         <input
           type="text"
           placeholder="Search for books..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{ padding: 8, width: "70%", marginRight: 8 }}
+          className="search-input"
         />
-        <button onClick={searchBooks} style={{ padding: "8px 12px" }}>
+        <button onClick={searchBooks} className="search-btn" style={{ padding: "8px 12px" }}>
           Search
         </button>
       </div>
@@ -212,7 +206,7 @@ export default function BookRanker() {
           {results.map((item) => {
             const info = item.volumeInfo;
             return (
-              <div key={item.id} style={{ border: "1px solid #ccc", padding: 8, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={item.id} id="bookboxes">
                 <div>
                   <div><strong>{info.title}</strong></div>
                   <div style={{ fontSize: 12, color: "#666" }}>{info.authors?.join(", ")}</div>
@@ -231,10 +225,10 @@ export default function BookRanker() {
           {topBooks.map((item, index) => {
             const info = item.volumeInfo;
             return (
-              <div key={item.id} style={{ border: "1px solid #ccc", padding: 8, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={item.id} className="bookboxes">
                 <div>
                   <div><strong>#{index + 1} - {info.title}</strong></div>
-                  <div style={{ fontSize: 12, color: "#666" }}>{info.authors?.join(", ")}</div>
+                  <div style={{ fontSize: 12 }}>{info.authors?.join(", ")}</div>
                 </div>
                 <button onClick={() => removeFromTop(item.id)}>Remove</button>
               </div>
