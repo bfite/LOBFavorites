@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import './styles.css';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -195,6 +194,10 @@ export default function BookRanker() {
     window.location.href = "#/login";
   }
 
+  async function handleSeeResults() {
+    window.location.href = "#/results";
+  }
+
   return (
     <div style={{ maxWidth: 768, margin: "0 auto", padding: 16 }}>
 
@@ -238,6 +241,9 @@ export default function BookRanker() {
 
       <span className="deckled-label">Love</span>
     </div>
+
+            <button className="search-btn" onClick={handleSeeResults}>See All Voting Results</button>
+
 
 
 
