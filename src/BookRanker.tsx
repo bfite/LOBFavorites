@@ -106,7 +106,7 @@ export default function BookRanker() {
     setErrorMsg(null);
     try {
       const res = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}`
+        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&key=AIzaSyAiixpGM82RMzXRpoxGqAq5QEzGF04ggkE`
       );
       const data = await res.json();
       setResults(data.items || []);
@@ -247,43 +247,44 @@ export default function BookRanker() {
 
 
 
-      <div style={{ display: "flex", gap: 24 }}>
-        <div style={{ flex: 1 }}>
-          <h2>Search Results</h2>
-          {results.length === 0 && <p>No results</p>}
-          {results.map((item) => {
-            const info = item.volumeInfo;
-            return (
-              <div key={item.id} id="bookboxes">
-                <div>
-                  <div><strong>{info.title}</strong></div>
-                  <div style={{ fontSize: 12, color: "#666" }}>{info.authors?.join(", ")}</div>
-                </div>
-                <button onClick={() => addToTop(item)} disabled={topBooks.length >= 10}>
-                  Add
-                </button>
-              </div>
-            );
-          })}
+      <div className="book-columns">
+  <div className="search-results">
+    <h2>Search Results</h2>
+    {results.length === 0 && <p>No results</p>}
+    {results.map((item) => {
+      const info = item.volumeInfo;
+      return (
+        <div key={item.id} id="bookboxes">
+          <div>
+            <div><strong>{info.title}</strong></div>
+            <div style={{ fontSize: 12, color: "#666" }}>{info.authors?.join(", ")}</div>
+          </div>
+          <button onClick={() => addToTop(item)} disabled={topBooks.length >= 10}>
+            Add
+          </button>
         </div>
+      );
+    })}
+  </div>
 
-        <div style={{ flex: 1 }}>
-          <h2>Your Top Books</h2>
-          {topBooks.length === 0 && <p>No books added yet.</p>}
-          {topBooks.map((item) => {
-            const info = item.volumeInfo;
-            return (
-              <div key={item.id} className="bookboxes">
-                <div>
-                  <div><strong>{info.title}</strong></div>
-                  <div style={{ fontSize: 12 }}>{info.authors?.join(", ")}</div>
-                </div>
-                <button onClick={() => removeFromTop(item.id)}>Remove</button>
-              </div>
-            );
-          })}
+  <div className="top-books">
+    <h2>Your Top Books</h2>
+    {topBooks.length === 0 && <p>No books added yet.</p>}
+    {topBooks.map((item) => {
+      const info = item.volumeInfo;
+      return (
+        <div key={item.id} className="bookboxes">
+          <div>
+            <div><strong>{info.title}</strong></div>
+            <div style={{ fontSize: 12 }}>{info.authors?.join(", ")}</div>
+          </div>
+          <button onClick={() => removeFromTop(item.id)}>Remove</button>
         </div>
-      </div>
+      );
+    })}
+  </div>
+</div>
+
     </div>
   );
 }

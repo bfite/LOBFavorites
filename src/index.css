@@ -327,3 +327,25 @@ input:checked + .slider:before {
   font-weight: bold;
   user-select: none;
 }
+
+
+.book-columns {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.search-results, .top-books {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .book-columns {
+    flex-direction: column;
+  }
+
+  .search-results,
+  .top-books {
+    width: 100%;
+  }
+}
